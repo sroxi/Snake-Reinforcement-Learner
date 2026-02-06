@@ -1,167 +1,74 @@
-import pygame
-import numpy as np
-from enum import Enum
-from collections import namedtuple
-import random
+#!/usr/bin/env python3
+"""
+Quick test script to verify that both windows display correctly
+"""
+import sys
 
-pygame.init()
+print("Testing display windows...")
+print("=" * 60)
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (200, 0, 0)
-GREEN1 = (0, 200, 0)
-GREEN2 = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-# Direction enum
-class Direction(Enum):
-    RIGHT = 1
-    LEFT = 2
-    UP = 3
-    DOWN = 4
-
-Point = namedtuple('Point', 'x, y')
-
-# Game settings
-BLOCK_SIZE = 40
-SPEED = 80
-
-class SnakeGame:
-    def __init__(self, w=15, h=15):
-        self.w = w
-        self.h = h
-        # Initialize display
-        self.display = pygame.display.set_mode((self.w, self.h))
-        pygame.display.set_caption('Snake RL')
-        self.clock = pygame.time.Clock()
-        self.reset()
-        
-    def reset(self):
-        # Initialize game state
-        self.direction = Direction.RIGHT
-        
-        self.head = Point(self.w/2, self.h/2)
-        self.snake = [self.head,
-                      Point(self.head.x-BLOCK_SIZE, self.head.y),
-                      Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
-        
-        self.score = 0
-        self.food = None
-        self._place_food()
-        self.frame_iteration = 0
-        
-    def _place_food(self):
-        x = random.randint(0, (self.w-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
-        y = random.randint(0, (self.h-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
-        self.food = Point(x, y)
-        if self.food in self.snake:
-            self._place_food()
+# Test pygame window
+print("1. Testing Pygame window...")
+try:
+    import pygame
+    pygame.init()
+    screen = pygame.display.set_mode((15, 15))
+    pygame.display.set_caption('Test - Snake Game Window')
+    screen.fill((0, 0, 0))
+    font = pygame.font.SysFont('arial', 36)
+    text = font.render('Pygame Window Works!', True, (255, 255, 255))
+    screen.blit(text, (150, 200))
+    pygame.display.flip()
+    print("   ✓ Pygame window should be visible")
+    print("   Close the window to continue...")
     
-    def play_step(self, action, game_num=0, record=0, mean_score=0.0):
-        self.frame_iteration += 1
-        # 1. Collect user input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-        
-        # 2. Move
-        self._move(action)  # Update the head
-        self.snake.insert(0, self.head)
-        
-        # 3. Check if game over
-        reward = 0
-        game_over = False
-        if self.is_collision() or self.frame_iteration > 100*len(self.snake):
-            game_over = True
-            reward = -10
-            return reward, game_over, self.score
-        
-        # 4. Place new food or just move
-        if self.head == self.food:
-            self.score += 1
-            reward = 10
-            self._place_food()
-        else:
-            self.snake.pop()
-        
-        # 5. Update ui and clock
-        self._update_ui(game_num, record, mean_score)
-        self.clock.tick(SPEED)
-        
-        # 6. Return game over and score
-        return reward, game_over, self.score
+    # Wait a bit for user to see it
+    import time
+    time.sleep(2)
     
-    def is_collision(self, pt=None):
-        if pt is None:
-            pt = self.head
-        # Hits boundary
-        if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
-            return True
-        # Hits itself
-        if pt in self.snake[1:]:
-            return True
-        
-        return False
+    # Check for quit
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+except Exception as e:
+    print(f"   ✗ Pygame error: {e}")
+    sys.exit(1)
+
+# Test matplotlib window
+print("\n2. Testing Matplotlib window...")
+try:
+    import matplotlib
+    import sys
+    # Use macOSX backend on macOS to avoid tkinter conflicts
+    if sys.platform == 'darwin':
+        matplotlib.use('macOSX')
+    else:
+        matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt
     
-    def _update_ui(self, game_num=0, record=0, mean_score=0.0):
-        self.display.fill(BLACK)
-        
-        for pt in self.snake:
-            pygame.draw.rect(self.display, GREEN1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, GREEN2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
-        
-        pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
-        
-        # Display multiple lines of information
-        font = pygame.font.SysFont('arial', 20)
-        font_small = pygame.font.SysFont('arial', 16)
-        
-        score_text = font.render(f"Score: {self.score}", True, WHITE)
-        length_text = font_small.render(f"Length: {len(self.snake)}", True, WHITE)
-        
-        self.display.blit(score_text, [10, 5])
-        self.display.blit(length_text, [10, 30])
-        
-        if game_num > 0:
-            game_text = font_small.render(f"Game: {game_num}", True, WHITE)
-            record_text = font_small.render(f"Record: {record}", True, (255, 215, 0))  # Gold color
-            mean_text = font_small.render(f"Mean: {mean_score:.1f}", True, WHITE)
-            
-            self.display.blit(game_text, [10, 50])
-            self.display.blit(record_text, [10, 70])
-            self.display.blit(mean_text, [10, 90])
-        
-        pygame.display.flip()
+    plt.ion()
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.text(0.5, 0.5, 'Matplotlib Dashboard Works!', 
+            ha='center', va='center', fontsize=20, 
+            transform=ax.transAxes)
+    ax.set_title('Test - Training Dashboard')
+    plt.show(block=False)
+    plt.pause(0.1)
+    print("   ✓ Matplotlib window should be visible")
+    print("   Close the window to continue...")
     
-    def _move(self, action):
-        # [straight, right turn, left turn]
-        
-        clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
-        idx = clock_wise.index(self.direction)
-        
-        if np.array_equal(action, [1, 0, 0]):
-            new_dir = clock_wise[idx]  # no change
-        elif np.array_equal(action, [0, 1, 0]):
-            next_idx = (idx + 1) % 4
-            new_dir = clock_wise[next_idx]  # right turn r -> d -> l -> u
-        else:  # [0, 0, 1]
-            next_idx = (idx - 1) % 4
-            new_dir = clock_wise[next_idx]  # left turn r -> u -> l -> d
-        
-        self.direction = new_dir
-        
-        x = self.head.x
-        y = self.head.y
-        if self.direction == Direction.RIGHT:
-            x += BLOCK_SIZE
-        elif self.direction == Direction.LEFT:
-            x -= BLOCK_SIZE
-        elif self.direction == Direction.DOWN:
-            y += BLOCK_SIZE
-        elif self.direction == Direction.UP:
-            y -= BLOCK_SIZE
-            
-        self.head = Point(x, y)
+    import time
+    time.sleep(2)
+    
+    plt.close(fig)
+except Exception as e:
+    print(f"   ✗ Matplotlib error: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+
+print("\n" + "=" * 60)
+print("All display tests passed!")
+print("If you saw both windows, the display is working correctly.")
+print("=" * 60)
 
