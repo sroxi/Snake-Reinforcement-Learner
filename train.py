@@ -18,7 +18,7 @@ def train():
     print("=" * 60)
     print("Snake RL Training Started")
     print("=" * 60)
-    print("Close the game window or press Ctrl+C to stop training")
+    print("Click the Quit button in the game window, or press Ctrl+C to stop")
     print("=" * 60)
     print("\nInitializing visualization...")
     print("You should see:")
@@ -42,8 +42,12 @@ def train():
             final_move = agent.get_action(state_old)
             
             # Perform move and get new state (pass stats for display)
-            reward, done, score = game.play_step(final_move, agent.n_games, record, mean_score)
+            reward, done, score, user_quit = game.play_step(final_move, agent.n_games, record, mean_score)
             state_new = agent.get_state(game)
+            
+            if user_quit:
+                print("\nQuit button pressed. Stopping training...")
+                break
             
             # Train short memory
             agent.train_short_memory(state_old, final_move, reward, state_new, done)
@@ -78,16 +82,18 @@ def train():
                 
     except KeyboardInterrupt:
         print("\n" + "=" * 60)
-        print("Training stopped by user")
+        print("Training stopped by user (Ctrl+C)")
+        print("=" * 60)
+    finally:
         print(f"Final Statistics:")
         print(f"  Total Games: {agent.n_games}")
         print(f"  Record Score: {record}")
         print(f"  Mean Score: {total_score / max(1, agent.n_games):.2f}")
         print("=" * 60)
         visualizer.close()
+        import pygame
         pygame.quit()
 
 if __name__ == '__main__':
-    import pygame
     train()
 
