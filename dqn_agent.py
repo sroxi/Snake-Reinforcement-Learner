@@ -6,7 +6,7 @@ import numpy as np
 from collections import deque
 import random
 import os
-from snake_game import Direction, Point
+# snake_game imported lazily in get_state so train.py can open matplotlib before pygame
 
 class Linear_QNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -90,6 +90,7 @@ class Agent:
         # TODO: model, trainer
         
     def get_state(self, game):
+        from snake_game import Direction, Point
         head = game.snake[0]
         point_l = Point(head.x - 20, head.y)
         point_r = Point(head.x + 20, head.y)
