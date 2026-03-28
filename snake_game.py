@@ -26,9 +26,11 @@ Point = namedtuple('Point', 'x, y')
 # Game settings
 BLOCK_SIZE = 20
 SPEED = 60
+DEFAULT_WINDOW_WIDTH = 640
+DEFAULT_WINDOW_HEIGHT = 480
 
 class SnakeGame:
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=DEFAULT_WINDOW_WIDTH, h=DEFAULT_WINDOW_HEIGHT):
         self.w = w
         self.h = h
         # Initialize display (visible window size in pixels)
