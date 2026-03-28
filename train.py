@@ -1,15 +1,23 @@
-from snake_game import SnakeGame
-from dqn_agent import Agent
-from visualizer import TrainingVisualizer
-import numpy as np
 import os
 
+# Game window on the left; must be set before pygame/SDL init (snake_game import).
+os.environ.setdefault("SDL_VIDEO_WINDOW_POS", "40,40")
+
+import numpy as np
+
 def train():
+    # Import order matters on macOS: matplotlib (TkAgg) window must exist before pygame.init().
+    from visualizer import TrainingVisualizer
+    from dqn_agent import Agent
+
     total_score = 0
     record = 0
     agent = Agent()
+    # Stats window to the right of the game (same defaults as SnakeGame)
+    visualizer = TrainingVisualizer(game_width=640, game_height=480)
+    from snake_game import SnakeGame
+
     game = SnakeGame()
-    visualizer = TrainingVisualizer()
     
     # Try to load existing model
     if agent.model.load():
