@@ -1,22 +1,33 @@
 import matplotlib
 import sys
-# Use macOSX backend on macOS, TkAgg on others
-if sys.platform == 'darwin':
-    matplotlib.use('macOSX')  # Native macOS backend, avoids tkinter conflicts
+
+# TkAgg must be selected before pygame loads (train.py imports this module first).
+# That avoids macOS Tk/pygame conflicts and lets us place the stats window with wm_geometry.
+if "pygame" not in sys.modules:
+    matplotlib.use("TkAgg")
 else:
-    matplotlib.use('TkAgg')
+    matplotlib.use("macOSX" if sys.platform == "darwin" else "TkAgg")
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle
 import matplotlib.patches as mpatches
 
 class TrainingVisualizer:
-    def __init__(self):
+    def __init__(self, game_width=640, game_height=480, margin=40):
+        """Place dashboard to the right of the game window (game_width x game_height in px)."""
+        self.game_width = game_width
+        self.game_height = game_height
+        self.margin = margin
+
         plt.ion()  # Turn on interactive mode
-        self.fig = plt.figure(figsize=(16, 10))
+        # Slightly smaller figure so it fits beside the game on typical screens
+        self.fig = plt.figure(figsize=(14, 8))
         self.fig.suptitle('Snake RL Training Dashboard', fontsize=16, fontweight='bold')
         plt.show(block=False)  # Show the figure immediately
         plt.pause(0.1)  # Small pause to ensure window appears
+
+        self._position_window()
         
         # Create subplots
         self.ax1 = plt.subplot(2, 3, 1)  # Score plot
@@ -86,12 +97,26 @@ class TrainingVisualizer:
         plt.tight_layout()
         plt.draw()
         plt.pause(0.01)
-        # Force window to front (platform dependent)
+        # Do not raise_() the stats window — it would steal focus from the game every frame.
+
+    def _position_window(self):
+        """Put the dashboard to the right of the pygame window so it does not cover the game."""
         try:
-            self.fig.canvas.manager.window.raise_()
-        except:
-            pass  # Some backends don't support this
-    
+            mng = self.fig.canvas.manager
+            win = getattr(mng, "window", None)
+            if win is None:
+                return
+            dpi = self.fig.dpi
+            w_px = int(self.fig.get_figwidth() * dpi)
+            h_px = int(self.fig.get_figheight() * dpi)
+            x = self.game_width + self.margin
+            y = self.margin
+            if hasattr(win, "wm_geometry"):
+                win.wm_geometry(f"{w_px}x{h_px}+{x}+{y}")
+                win.title("Snake RL Training Dashboard")
+        except Exception:
+            pass
+
     def _plot_scores(self):
         """Plot individual game scores"""
         if len(self.scores) > 0:
